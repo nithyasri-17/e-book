@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Book Creator Pro</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      min-height: 100vh; display: flex;
+      align-items: center; justify-content: center;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: linear-gradient(135deg, #111, #333);
+      color: #eee;
+    }
+
+    .login-box, .app-container, .review-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      padding: 25px;
+      width: 90%; max-width: 600px;
+      transition: 0.3s;
+    }
+
+    body.dark .login-box, body.dark .app-container, body.dark .review-container {
+      background: #222;
+      color: #fff;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    body.dark h1 { color: #fff; }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    body.dark input, body.dark textarea, body.dark select {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+
+    button {
+      background: #2575fc;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    button:hover { background: #6a11cb; }
+
+    .top-controls {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .theme-toggle {
+      cursor: pointer; font-size: 14px;
+      color: #2575fc;
+    }
+
+    .display {
+      margin-top: 15px;
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 10px;
+      min-height: 100px;
+      white-space: pre-wrap;
+    }
+
+    body.dark .display {
+      background: #444;
+    }
+
+    .page-number {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .book-view {
+      background: #faf4e1;
+      padding: 30px;
+      border-radius: 12px;
+      font-family: "Garamond", serif;
+      color: #222;
+      line-height: 1.6;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    body.dark .book-view {
+      background: #222;
+      color: #fff;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Login Page -->
+  <div class="login-box" id="loginBox">
+    <h1>🔐 E-Book Creator Login</h1>
+    <input type="text" id="username" placeholder="Enter your name" />
+    <button onclick="login()">Login</button>
+    <p id="loginMessage" style="color:red;text-align:center;margin-top:10px;"></p>
+  </div>
+
+  <!-- App Page -->
+  <div class="app-container hidden" id="appContainer">
+    <div class="top-controls">
+      <h1>📘 E-Book Creator</h1>
+      <span class="theme-toggle" onclick="toggleTheme()">🌓 Mode</span>
+    </div>
+
+    <label>Font Style:</label>
+    <select id="fontFamily">
+      <option value="Poppins">Poppins</option>
+      <option value="Garamond">Garamond</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Times New Roman">Times New Roman</option>
+    </select>
+
+    <label>Font Size:</label>
+    <select id="fontSize">
+      <option value="16px">16px</option>
+      <option value="18px">18px</option>
+      <option value="20px">20px</option>
+      <option value="24px">24px</option>
+    </select>
+
+    <textarea id="pageInput" placeholder="Write your page content here..."></textarea>
+
+    <div class="top-controls">
+      <button onclick="addPage()">Add Page</button>
+      <button onclick="prevPage()">◀ Previous</button>
+      <button onclick="nextPage()">Next ▶</button>
+      <button onclick="submitBook()">Submit</button>
+    </div>
+
+    <div class="display" id="bookDisplay">No pages yet. Start writing your e-book!</div>
+    <div class="page-number" id="pageNumber"></div>
+  </div>
+
+  <!-- Review Page -->
+  <div class="review-container hidden" id="reviewContainer">
+    <h1>📖 Your E-Book Review</h1>
+    <div class="book-view" id="bookReview"></div>
+  </div>
+
+  <script>
+    function login() {
+      const user = document.getElementById("username").value.trim();
+      const message = document.getElementById("loginMessage");
+      if (user === "Nithya") {
+        document.getElementById("loginBox").classList.add("hidden");
+        document.getElementById("appContainer").classList.remove("hidden");
+      } else {
+        message.textContent = "Invalid login";
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
+
+    const pages = [];
+    let currentPage = 0;
+
+    const pageInput = document.getElementById("pageInput");
+    const display = document.getElementById("bookDisplay");
+    const pageNumber = document.getElementById("pageNumber");
+    const fontFamily = document.getElementById("fontFamily");
+    const fontSize = document.getElementById("fontSize");
+
+    fontFamily.addEventListener("change", updateStyle);
+    fontSize.addEventListener("change", updateStyle);
+
+    function updateStyle() {
+      display.style.fontFamily = fontFamily.value;
+      display.style.fontSize = fontSize.value;
+    }
+
+    function addPage() {
+      const text = pageInput.value.trim();
+      if (text) {
+        pages.push(text);
+        currentPage = pages.length - 1;
+        pageInput.value = "";
+        showPage();
+      } else {
+        alert("Please write something before adding a page!");
+      }
+    }
+
+    function showPage() {
+      if (pages.length === 0) {
+        display.textContent = "No pages yet. Start writing your e-book!";
+        pageNumber.textContent = "";
+      } else {
+        display.textContent = pages[currentPage];
+        pageNumber.textContent = `Page ${currentPage + 1} of ${pages.length}`;
+        updateStyle();
+      }
+    }
+
+    function nextPage() {
+      if (currentPage < pages.length - 1) {
+        currentPage++;
+        showPage();
+      } else {
+        alert("No next page!");
+      }
+    }
+
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        showPage();
+      } else {
+        alert("No previous page!");
+      }
+    }
+
+    function submitBook() {
+      if (pages.length === 0) {
+        alert("Add some pages first!");
+        return;
+      }
+
+      const bookHTML = pages
+        .map((p, i) => `<h3>Chapter ${i + 1}</h3><p>${p}</p><hr>`)
+        .join("");
+
+      document.getElementById("appContainer").classList.add("hidden");
+      const reviewBox = document.getElementById("reviewContainer");
+      reviewBox.classList.remove("hidden");
+      document.getElementById("bookReview").innerHTML = bookHTML;
+    }
+  </script>
+</body>
+</html>
